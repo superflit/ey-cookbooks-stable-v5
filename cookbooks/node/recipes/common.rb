@@ -1,5 +1,8 @@
 get_package_name = {
   '4.4.5' => 'net-libs/nodejs',
+  '8.12.0' => 'net-libs/nodejs-bin',
+  '9.11.2' => 'net-libs/nodejs-bin',
+  '10.10.0' => 'net-libs/nodejs-bin'
 }
 get_package_name.default = 'net-libs/nodejs'
 
@@ -130,8 +133,10 @@ managed_template "/opt/nodejs/nodejs_available_versions.json" do
   })
 end
 
-# Install yarn
-include_recipe "node::yarn"
+# Install yarn. YT-CC-1132.
+package 'sys-apps/yarn' do
+  version '0.27.5'
+end
 
 if node.engineyard.environment.component?('nodejs')
   include_recipe "node::ey_node_app_info"

@@ -36,9 +36,10 @@ defaults
   # request. HAProxy documentation has a long explanation for this option.
   option abortonclose
 
-  # Check if a "Connection: close" header is already set in each direction,
-  # and will add one if missing.
-  option httpclose
+  # [YT-CC-629] httpclose replaced with http-server-close. Enabling Server Close (SCL) mode.
+  # More information about connection closing modes:
+  # https://www.haproxy.com/documentation/aloha/7-0/traffic-management/lb-layer7/http-modes
+  option http-server-close
 
   # Insert the X-Forwarded-For header for requests sent to the backend.
   option forwardfor
@@ -97,7 +98,9 @@ listen cluster
   option httpchk HEAD <%= @httpchk_path %><% if @httpchk_host %> HTTP/1.1\r\nHost:\ <%= @httpchk_host %><% end %>
   http-check expect rstatus ((2|3)[0-9][0-9]|503)
 <% end -%>
-  reqadd X-Forwarded-Proto:\ http
+# YT-CC-666 X-Forwarded-Port added
+  http-request add-header X-Forwarded-Proto http
+  http-request set-header X-Forwarded-Port %[dst_port]
 
   <% @backends.each_with_index do |instance, i| %>
   server app-<%= i %> <%= instance['private_hostname'] %>:81 check inter 5000 fastinter 1000 fall 1 weight <%= (instance['role'] == 'app_master') ? @app_master_weight : 50 %> # <%= instance['id'] %>
